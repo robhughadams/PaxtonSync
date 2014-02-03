@@ -11,6 +11,7 @@ namespace PaxtonSync
     {
         private IUserView _wrappedUser;
         private int? _becNumber;
+        private int? _accessLevelId;
 
         public PaxtonUser(IUserView user)
         {
@@ -73,7 +74,11 @@ namespace PaxtonSync
 
         public int UserId { get { return _wrappedUser.UserId; } }
 
-        public int AccessLevelId { get { return _wrappedUser.AccessLevelId; } }
+        public int AccessLevelId 
+        { 
+            get { return _accessLevelId ?? _wrappedUser.AccessLevelId; }
+            set { _accessLevelId = value; }
+        }
 
         public int DepartmentId { get { return _wrappedUser.DepartmentId; } }
 

@@ -21,4 +21,4 @@ use Net2
 
 select top 1000 *
 from users
-where field13_Memo is not null
+where field13_Memo is not null and Field13_Memo not like ''

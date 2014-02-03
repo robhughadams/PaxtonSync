@@ -59,7 +59,7 @@ namespace PaxtonSync
                 {
                     Console.WriteLine("Looking up: {0} {1} {2}", details.BecNumber, details.FirstName, details.LastName);
 
-                    var matchingUsers = paxtonUsers
+                    IReadOnlyCollection<PaxtonUser> matchingUsers = paxtonUsers
                         .Where(u =>
                             u.Surname.Equals(details.LastName, StringComparison.OrdinalIgnoreCase)
                             && u.FirstName.Equals(details.FirstName, StringComparison.OrdinalIgnoreCase))
@@ -72,20 +72,36 @@ namespace PaxtonSync
                     if (matches == 1)
                     {
                         Console.WriteLine("Single matching user found - good times.");
-
-                        var paxtonUser = matchingUsers.First();
-                        if (paxtonUser.BecNumber == null)
-                        {
-                            Console.WriteLine("No BEC number on Paxton DB - adding it.");
-
-                            paxtonUser.BecNumber = details.BecNumber;
-                            userRepository.UpdateUser(paxtonUser);
-                        }
+                        _UpdateExistingPaxtonUser(userRepository, details, matchingUsers.First());
                     }
 
                     if (matches > 1)
                         Console.WriteLine("Multiple matching users found - bad times.");
                 }
+            }
+        }
+
+        private static readonly IEnumerable<MembershipStatus> _noAccessMembershipStatuses = new[] { MembershipStatus.Cancelled, MembershipStatus.Deceased, MembershipStatus.Expired };
+
+        private const int _noAccess = 0; //Hopefully safe to hard code this.
+
+        private static void _UpdateExistingPaxtonUser(PaxtonUserRepository userRepository, MembershipDetails details, PaxtonUser paxtonUser)
+        {
+            if (paxtonUser.BecNumber == null)
+            {
+                Console.WriteLine("No BEC number on Paxton DB - adding it.");
+
+                paxtonUser.BecNumber = details.BecNumber;
+                userRepository.UpdateUser(paxtonUser);
+            }
+
+            if (_noAccessMembershipStatuses.Contains(details.MembershipStatus)
+                && paxtonUser.AccessLevelId != _noAccess)
+            {
+                Console.WriteLine("Users membership status is {0} setting access level to 'No Access'", details.MembershipStatus);
+
+                paxtonUser.AccessLevelId = _noAccess;
+                userRepository.UpdateUser(paxtonUser);
             }
         }
         
