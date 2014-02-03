@@ -51,11 +51,9 @@ namespace PaxtonSync
             {
                 _Login(net2Client);
 
-                var allUsers = from pair in net2Client.ViewUserRecords().UsersList()
-                               let user = pair.Value
-                               select user;
+                var userRepository = new PaxtonUserRepository(net2Client);
 
-                var paxtonUsers = allUsers.ToArray(); //.ToDictionary(u => u.FirstName + " " + u.Surname, u => u);
+                var paxtonUsers = userRepository.GetAllUsers();
 
                 foreach (var details in membershipDetails)
                 {
@@ -76,9 +74,12 @@ namespace PaxtonSync
                         Console.WriteLine("Single matching user found - good times.");
 
                         var paxtonUser = matchingUsers.First();
-                        if (paxtonUser.BecNumber() == null)
+                        if (paxtonUser.BecNumber == null)
                         {
-                            UpdateBecNumber(net2Client, paxtonUser, details.BecNumber);
+                            Console.WriteLine("No BEC number on Paxton DB - adding it.");
+
+                            paxtonUser.BecNumber = details.BecNumber;
+                            userRepository.UpdateUser(paxtonUser);
                         }
                     }
 
@@ -87,55 +88,7 @@ namespace PaxtonSync
                 }
             }
         }
-
-        private static void UpdateBecNumber(OemClient net2Client, IUserView paxtonUser, int becNumber)
-        {
-            Console.WriteLine("No BEC number on Paxton DB - adding it.");
-
-            var result = net2Client.UpdateUserRecord(
-                paxtonUser.UserId,
-                paxtonUser.AccessLevelId,
-                paxtonUser.DepartmentId,
-                paxtonUser.AntiPassbackUser,
-                paxtonUser.AlarmUser,
-                paxtonUser.FirstName,
-                paxtonUser.MiddleName,
-                paxtonUser.Surname,
-                paxtonUser.Telephone,
-                paxtonUser.Extension,
-                paxtonUser.PIN,
-                paxtonUser.Picture,
-                paxtonUser.ActivationDate,
-                paxtonUser.Active,
-                paxtonUser.Fax,
-                paxtonUser.ExpiryDate,
-                _GetCustomFields(paxtonUser, becNumber));
-
-            if (!result)
-                throw new Exception(net2Client.LastErrorMessage);
-        }
-
-        private static string[] _GetCustomFields(IUserView paxtonUser, int becNumber)
-        {
-            return new[] {
-                null, //Sample progam pads the first item for no discernable reason
-                paxtonUser.Field1_100,
-                paxtonUser.Field2_100,
-                paxtonUser.Field3_50,
-                paxtonUser.Field4_50,
-                paxtonUser.Field5_50,
-                paxtonUser.Field6_50,
-                paxtonUser.Field7_50,
-                paxtonUser.Field8_50,
-                paxtonUser.Field9_50,
-                paxtonUser.Field10_50,
-                paxtonUser.Field11_50,
-                paxtonUser.Field12_50,
-                paxtonUser.Field13_Memo,
-                becNumber.ToString()
-            };
-        }
-
+        
         private static void _Login(OemClient _net2Client)
         {
             var users = _net2Client

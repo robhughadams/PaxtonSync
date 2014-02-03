@@ -9,13 +9,6 @@ namespace PaxtonSync
 {
     static class PaxtonExtensions
     {
-        public static int? BecNumber(this IUserView paxtonUser)
-        {
-            int result;
-            if (Int32.TryParse(paxtonUser.Field14_50, out result))
-                return result;
 
-            return null;
-        }
     }
 }
