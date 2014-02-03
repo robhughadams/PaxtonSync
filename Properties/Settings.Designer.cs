@@ -35,18 +35,36 @@ namespace PaxtonSync.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("user")]
-        public string UserName {
+        public string WebUser {
             get {
-                return ((string)(this["UserName"]));
+                return ((string)(this["WebUser"]));
             }
         }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("pass")]
-        public string Password {
+        public string WebPass {
             get {
-                return ((string)(this["Password"]));
+                return ((string)(this["WebPass"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("user")]
+        public string PaxtonUser {
+            get {
+                return ((string)(this["PaxtonUser"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("pass")]
+        public string PaxtonPass {
+            get {
+                return ((string)(this["PaxtonPass"]));
             }
         }
     }

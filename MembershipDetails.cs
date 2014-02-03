@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PaxtonSync
 {
-    public class MembershipDetails
+    class MembershipDetails
     {
         //{\"becNumber\":\"1416\",\"firstName\":\"Robert\",\"lastName\":\"Adams\",\"membershipStatus\":\"Current\"}
         
@@ -16,7 +16,7 @@ namespace PaxtonSync
         public MembershipStatus MembershipStatus { get; set; }
     }
 
-    public enum MembershipStatus
+    enum MembershipStatus
     {
         Current,
         LYBNTY,
