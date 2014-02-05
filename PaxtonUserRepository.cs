@@ -7,9 +7,9 @@ namespace PaxtonSync
 {
 	internal class PaxtonUserRepository
 	{
-		private readonly OemClient _net2Client;
+		private readonly PaxtonClient _net2Client;
 
-		public PaxtonUserRepository(OemClient net2Client)
+		public PaxtonUserRepository(PaxtonClient net2Client)
 		{
 			_net2Client = net2Client;
 		}
@@ -25,7 +25,7 @@ namespace PaxtonSync
 
 		public void UpdateUser(PaxtonUser paxtonUser)
 		{
-			var result = _net2Client.UpdateUserRecord(
+			_net2Client.UpdateUserRecord(
 				paxtonUser.UserId,
 				paxtonUser.AccessLevelId,
 				paxtonUser.DepartmentId,
@@ -43,9 +43,6 @@ namespace PaxtonSync
 				paxtonUser.Fax,
 				paxtonUser.ExpiryDate,
 				paxtonUser.CustomFields);
-
-			if (!result)
-				throw new Exception(_net2Client.LastErrorMessage);
 		}
 	}
 }

@@ -5,10 +5,16 @@
     <Setting Name="DownloadUrl" Type="System.String" Scope="Application">
       <Value Profile="(Default)">http://www.bec-cave.org.uk/civicrm_custom/paxton/paxton_sync.php</Value>
     </Setting>
-    <Setting Name="UserName" Type="System.String" Scope="Application">
+    <Setting Name="WebUser" Type="System.String" Scope="Application">
       <Value Profile="(Default)">user</Value>
     </Setting>
-    <Setting Name="Password" Type="System.String" Scope="Application">
+    <Setting Name="WebPass" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">pass</Value>
+    </Setting>
+    <Setting Name="PaxtonUser" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">user</Value>
+    </Setting>
+    <Setting Name="PaxtonPass" Type="System.String" Scope="Application">
       <Value Profile="(Default)">pass</Value>
     </Setting>
   </Settings>

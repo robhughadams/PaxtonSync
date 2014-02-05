@@ -6,16 +6,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using Newtonsoft.Json;
-using Paxton.Net2.OemClientLibrary;
 using PaxtonSync.Properties;
 
 namespace PaxtonSync
 {
 	internal static class Program
 	{
-		private const int _remotePort = 8025;
-		private const string _remoteHost = "localhost";
-
 		internal static void Main(string[] args)
 		{
 			Console.WriteLine("Fetching membership details from www.bec-cave.org.uk");
@@ -46,38 +42,39 @@ namespace PaxtonSync
 
 		private static void _SyncMembers(IReadOnlyCollection<MembershipDetails> membershipDetails)
 		{
-			using (var net2Client = _CreateClient())
+			using (var net2Client = new PaxtonClient())
 			{
-				_Login(net2Client);
-
 				var userRepository = new PaxtonUserRepository(net2Client);
 
 				var paxtonUsers = userRepository.GetAllUsers();
 
 				foreach (var details in membershipDetails)
-				{
-					Console.WriteLine("Looking up: {0} {1} {2}", details.BecNumber, details.FirstName, details.LastName);
-
-					IReadOnlyCollection<PaxtonUser> matchingUsers = paxtonUsers
-						.Where(u =>
-							u.Surname.Equals(details.LastName, StringComparison.OrdinalIgnoreCase)
-								&& u.FirstName.Equals(details.FirstName, StringComparison.OrdinalIgnoreCase))
-						.ToArray();
-
-					var matches = matchingUsers.Count();
-					if (matches == 0)
-						Console.WriteLine("No matching user found.");
-
-					if (matches == 1)
-					{
-						Console.WriteLine("Single matching user found - good times.");
-						_UpdateExistingPaxtonUser(userRepository, details, matchingUsers.First());
-					}
-
-					if (matches > 1)
-						Console.WriteLine("Multiple matching users found - bad times.");
-				}
+					_SyncMember(details, paxtonUsers, userRepository);
 			}
+		}
+
+		private static void _SyncMember(MembershipDetails details, IReadOnlyCollection<PaxtonUser> paxtonUsers, PaxtonUserRepository userRepository)
+		{
+			Console.WriteLine("Looking up: {0} {1} {2}", details.BecNumber, details.FirstName, details.LastName);
+
+			IReadOnlyCollection<PaxtonUser> matchingUsers = paxtonUsers
+				.Where(u =>
+					u.Surname.Equals(details.LastName, StringComparison.OrdinalIgnoreCase)
+						&& u.FirstName.Equals(details.FirstName, StringComparison.OrdinalIgnoreCase))
+				.ToArray();
+
+			var matches = matchingUsers.Count();
+			if (matches == 0)
+				Console.WriteLine("No matching user found.");
+
+			if (matches == 1)
+			{
+				Console.WriteLine("Single matching user found - good times.");
+				_UpdateExistingPaxtonUser(userRepository, details, matchingUsers.First());
+			}
+
+			if (matches > 1)
+				Console.WriteLine("Multiple matching users found - bad times.");
 		}
 
 		private static readonly IEnumerable<MembershipStatus> _noAccessMembershipStatuses = new[] { MembershipStatus.Cancelled, MembershipStatus.Deceased, MembershipStatus.Expired };
@@ -102,34 +99,6 @@ namespace PaxtonSync
 				paxtonUser.AccessLevelId = _noAccess;
 				userRepository.UpdateUser(paxtonUser);
 			}
-		}
-
-		private static void _Login(OemClient net2Client)
-		{
-			var users = net2Client
-				.GetListOfOperators()
-				.UsersDictionary()
-				.Where(pair => pair.Value == Settings.Default.PaxtonUser)
-				.ToArray();
-
-			if (!users.Any())
-				throw new Exception("Paxton user not found.");
-
-			var userId = users.Single().Key;
-
-			var methodList = net2Client.AuthenticateUser(userId, Settings.Default.PaxtonPass);
-			if (methodList == null)
-				throw new Exception("Can't log onto Paxton.");
-		}
-
-		private static OemClient _CreateClient()
-		{
-			var net2Client = new OemClient(_remoteHost, _remotePort);
-
-			if (net2Client.LastErrorMessage != null)
-				throw new Exception(net2Client.LastErrorMessage);
-
-			return net2Client;
 		}
 	}
 }
