@@ -17,13 +17,41 @@ namespace PaxtonSync
 			Console.WriteLine("Fetching membership details from www.bec-cave.org.uk");
 			var membershipDetails = _DownloadMembershipDetails();
 
+			membershipDetails = _CombineMembershipsForSameMember(membershipDetails);
+
 			_SyncMembers(membershipDetails);
 
 			Console.WriteLine("Press enter to exit.");
 			Console.ReadLine();
 		}
 
-		private static IReadOnlyCollection<MembershipDetails> _DownloadMembershipDetails()
+		private static IEnumerable<MembershipDetails> _CombineMembershipsForSameMember(IEnumerable<MembershipDetails> membershipDetails)
+		{
+			return from details in membershipDetails
+				   group details by details.BecNumber into groupedDetails
+				   select groupedDetails.Count() == 1
+					   ? groupedDetails.Single()
+					   : _CreateSingleMembershipWithCorrectStatus(groupedDetails);
+		}
+
+		private static MembershipDetails _CreateSingleMembershipWithCorrectStatus(IGrouping<int, MembershipDetails> groupedDetails)
+		{
+			var firstDetails = groupedDetails.First();
+
+			var statusToUse = groupedDetails
+				.OrderBy(d => d.MembershipStatus)
+				.First().MembershipStatus;
+
+			return new MembershipDetails
+			{
+				BecNumber = firstDetails.BecNumber,
+				FirstName = firstDetails.FirstName,
+				LastName = firstDetails.LastName,
+				MembershipStatus = statusToUse
+			};
+		}
+
+		private static IEnumerable<MembershipDetails> _DownloadMembershipDetails()
 		{
 			using (var client = new HttpClient())
 			{
@@ -40,7 +68,7 @@ namespace PaxtonSync
 			}
 		}
 
-		private static void _SyncMembers(IReadOnlyCollection<MembershipDetails> membershipDetails)
+		private static void _SyncMembers(IEnumerable<MembershipDetails> membershipDetails)
 		{
 			using (var net2Client = new PaxtonClient())
 			{
@@ -79,8 +107,6 @@ namespace PaxtonSync
 
 		private static readonly IEnumerable<MembershipStatus> _noAccessMembershipStatuses = new[] { MembershipStatus.Cancelled, MembershipStatus.Deceased, MembershipStatus.Expired };
 
-		private const int _noAccess = 0; //Hopefully safe to hard code this.
-
 		private static void _UpdateExistingPaxtonUser(PaxtonUserRepository userRepository, MembershipDetails details, PaxtonUser paxtonUser)
 		{
 			if (paxtonUser.BecNumber == null)
@@ -90,6 +116,8 @@ namespace PaxtonSync
 				paxtonUser.BecNumber = details.BecNumber;
 				userRepository.UpdateUser(paxtonUser);
 			}
+
+			const int _noAccess = 0; //Hopefully safe to hard code this.
 
 			if (_noAccessMembershipStatuses.Contains(details.MembershipStatus)
 				&& paxtonUser.AccessLevelId != _noAccess)

@@ -135,5 +135,10 @@ namespace PaxtonSync
 		{
 			get { return _wrappedUser.ExpiryDate; }
 		}
+
+		public override string ToString()
+		{
+			return BecNumber + " " + FirstName + " " + Surname;
+		}
 	}
 }
