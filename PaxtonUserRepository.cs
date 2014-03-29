@@ -8,10 +8,12 @@ namespace PaxtonSync
 	internal class PaxtonUserRepository
 	{
 		private readonly PaxtonClient _net2Client;
+		private readonly bool _trialRunOnly;
 
-		public PaxtonUserRepository(PaxtonClient net2Client)
+		public PaxtonUserRepository(PaxtonClient net2Client, bool trialRunOnly)
 		{
 			_net2Client = net2Client;
+			_trialRunOnly = trialRunOnly;
 		}
 
 		public IReadOnlyCollection<PaxtonUser> GetAllUsers()
@@ -20,13 +22,16 @@ namespace PaxtonSync
 			               let user = pair.Value
 			               select new PaxtonUser(user);
 
-			return allUsers.ToArray(); //.ToDictionary(u => u.FirstName + " " + u.Surname, u => u);
+			return allUsers.ToArray();
 		}
 
 		public void UpdateUser(PaxtonUser paxtonUser)
 		{
-			//Console.WriteLine("Not really updating user for now...\n{0}", paxtonUser);
-			//return;
+			if (_trialRunOnly)
+			{
+				Logger.WriteLine("{0}\tTrial run - not updating user.", paxtonUser);
+				return;
+			}
 			
 			_net2Client.UpdateUserRecord(
 				paxtonUser.UserId,
@@ -46,6 +51,41 @@ namespace PaxtonSync
 				paxtonUser.Fax,
 				paxtonUser.ExpiryDate,
 				paxtonUser.CustomFields);
+		}
+
+		public void CreateUser(int accessLevelId, int departmentId, string firstName, string surname, int becNumber)
+		{
+			if (_trialRunOnly)
+			{
+				Logger.WriteLine("{0} {1}\tTrial run - not adding user.", firstName, surname);
+				return;
+			}
+
+			var CustomFields = new string[]
+			{
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					becNumber.ToString()
+			};
+
+			_net2Client.AddUserRecord(
+				accessLevelId,
+				departmentId,
+				firstName,
+				surname,
+				CustomFields);
 		}
 	}
 }

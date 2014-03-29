@@ -64,5 +64,13 @@ namespace PaxtonSync
 			if (!result)
 				 throw new Exception(_net2Client.LastErrorMessage);
 		}
+
+		public void AddUserRecord(int accessLevelId, int departmentId, string firstName, string surname, string[] customFields)
+		{
+			var result = _net2Client.AddUserRecord(accessLevelId, departmentId, antiPassbackInd: false, alarmUserInd: false, firstName: firstName, middleName: null, surname: surname, telephoneNo: null, telephoneExtension: null, pinCode: null, pictureFileName: null, activationDate: DateTime.UtcNow, cardNumber: 0, cardTypeId: 0, active: true, faxNo: null, expiryDate: DateTime.MinValue, customFields: customFields);
+
+			if (!result)
+				throw new Exception(_net2Client.LastErrorMessage);
+		}
 	}
 }

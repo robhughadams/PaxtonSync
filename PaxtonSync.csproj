@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Logger.cs" />
     <Compile Include="PaxtonClient.cs" />
     <Compile Include="PaxtonExtensions.cs" />
     <Compile Include="MembershipDetails.cs" />

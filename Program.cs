@@ -12,17 +12,22 @@ namespace PaxtonSync
 {
 	internal static class Program
 	{
+		private static bool _trialRunOnly;
+
 		internal static void Main(string[] args)
 		{
-			Console.WriteLine("Fetching membership details from www.bec-cave.org.uk");
+			if (args.Any() && args.First().StartsWith("t"))
+			{
+				_trialRunOnly = true;
+				Logger.WriteLine("*** Trial Run ***");
+			}
+
+			Logger.WriteLine("Fetching membership details from www.bec-cave.org.uk");
 			var membershipDetails = _DownloadMembershipDetails();
 
 			membershipDetails = _CombineMembershipsForSameMember(membershipDetails);
 
 			_SyncMembers(membershipDetails);
-
-			//Console.WriteLine("Press enter to exit.");
-			//Console.ReadLine();
 		}
 
 		private static IEnumerable<MembershipDetails> _CombineMembershipsForSameMember(IEnumerable<MembershipDetails> membershipDetails)
@@ -72,7 +77,7 @@ namespace PaxtonSync
 		{
 			using (var net2Client = new PaxtonClient())
 			{
-				var userRepository = new PaxtonUserRepository(net2Client);
+				var userRepository = new PaxtonUserRepository(net2Client, _trialRunOnly);
 
 				var paxtonUsers = userRepository.GetAllUsers();
 
@@ -83,7 +88,7 @@ namespace PaxtonSync
 
 		private static void _SyncMember(MembershipDetails details, IReadOnlyCollection<PaxtonUser> paxtonUsers, PaxtonUserRepository userRepository)
 		{
-			Console.WriteLine("Looking up: {0} {1} {2}", details.BecNumber, details.FirstName, details.LastName);
+			Logger.WriteLine("Looking up user: {0} {1} {2}", details.BecNumber, details.FirstName, details.LastName);
 
 			IReadOnlyCollection<PaxtonUser> matchingUsers = paxtonUsers
 				.Where(u =>
@@ -93,40 +98,77 @@ namespace PaxtonSync
 
 			var matches = matchingUsers.Count();
 			if (matches == 0)
-				Console.WriteLine("No matching user found.");
+			{
+				Logger.WriteLine("No matching user found.");
+				_AddNewPaxtonUser(userRepository, details);
+			}
 
 			if (matches == 1)
 			{
-				Console.WriteLine("Single matching user found - good times.");
+				Logger.WriteLine("Single matching user found - good times.");
 				_UpdateExistingPaxtonUser(userRepository, details, matchingUsers.First());
 			}
 
 			if (matches > 1)
-				Console.WriteLine("Multiple matching users found - bad times.");
+				Logger.WriteLine("Multiple matching users found - bad times.");
 		}
 
-		private static readonly IEnumerable<MembershipStatus> _noAccessMembershipStatuses = new[] { MembershipStatus.Cancelled, MembershipStatus.Deceased, MembershipStatus.Expired };
+		private static void _AddNewPaxtonUser(PaxtonUserRepository userRepository, MembershipDetails details)
+		{
+			// Assuming the ID's won't change
+			const int currentMembersAccess = 4; 
+			const int currentMemeberDepartmentId = 2; // 16 is probationary, but not sure I can be arsed with that.
+			userRepository.CreateUser(currentMembersAccess, currentMemeberDepartmentId,
+				details.FirstName, details.LastName, details.BecNumber);
+		}
+
+		private static readonly IEnumerable<MembershipStatus> _noAccessMembershipStatuses = new[] 
+		{ 
+			MembershipStatus.Cancelled,
+			MembershipStatus.Deceased, 
+			MembershipStatus.Expired 
+		};
 
 		private static void _UpdateExistingPaxtonUser(PaxtonUserRepository userRepository, MembershipDetails details, PaxtonUser paxtonUser)
 		{
 			if (paxtonUser.BecNumber == null)
 			{
-				Console.WriteLine("No BEC number on Paxton DB - adding it.");
+				Logger.WriteLine("No BEC number on Paxton DB - adding it.");
 
 				paxtonUser.BecNumber = details.BecNumber;
 				userRepository.UpdateUser(paxtonUser);
 			}
 
-			const int _noAccess = 0; //Hopefully safe to hard code this.
+			const int noAccess = 0; //Hopefully safe to hard code this - matches a value from a lookup table in the Paxton DB.
 
-			if (_noAccessMembershipStatuses.Contains(details.MembershipStatus)
-				&& paxtonUser.AccessLevelId != _noAccess)
+			if (_StatusShouldHaveNoAccess(details.MembershipStatus))
 			{
-				Console.WriteLine("Users membership status is {0} setting access level to 'No Access'", details.MembershipStatus);
+				if (paxtonUser.AccessLevelId != noAccess)
+				{
+					Logger.WriteLine("User's membership status is {0} setting access level to 'No Access'", details.MembershipStatus);
 
-				paxtonUser.AccessLevelId = _noAccess;
-				userRepository.UpdateUser(paxtonUser);
+					paxtonUser.AccessLevelId = noAccess;
+					userRepository.UpdateUser(paxtonUser);
+				}
+				else
+				{
+					Logger.WriteLine("User's access level is already set to 'No Access'", details.MembershipStatus);
+				}
+
+				return;
 			}
+
+			Logger.WriteLine("Current users access level is {0}.", details.MembershipStatus);
+		}
+
+		private static bool _StatusShouldHaveNoAccess(MembershipStatus status)
+		{
+			// Last year, but not this year members still have access from the AGM to the 1st Feb
+			var currentMonth = DateTime.UtcNow.Month;
+			var inGracePeriod = currentMonth == 1 || (currentMonth > 9 && currentMonth < 12);
+
+			return _noAccessMembershipStatuses.Contains(status)
+				|| (status == MembershipStatus.LYBNTY && !inGracePeriod);
 		}
 	}
 }
