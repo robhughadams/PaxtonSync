@@ -25,10 +25,9 @@ namespace PaxtonSync
 
 		public void UpdateUser(PaxtonUser paxtonUser)
 		{
-			Console.WriteLine("Not really updating user for now...\n{0}", paxtonUser);
-			return;
-
-
+			//Console.WriteLine("Not really updating user for now...\n{0}", paxtonUser);
+			//return;
+			
 			_net2Client.UpdateUserRecord(
 				paxtonUser.UserId,
 				paxtonUser.AccessLevelId,

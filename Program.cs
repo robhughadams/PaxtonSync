@@ -21,8 +21,8 @@ namespace PaxtonSync
 
 			_SyncMembers(membershipDetails);
 
-			Console.WriteLine("Press enter to exit.");
-			Console.ReadLine();
+			//Console.WriteLine("Press enter to exit.");
+			//Console.ReadLine();
 		}
 
 		private static IEnumerable<MembershipDetails> _CombineMembershipsForSameMember(IEnumerable<MembershipDetails> membershipDetails)

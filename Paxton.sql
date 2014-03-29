@@ -1,8 +1,8 @@
 use Net2
 
---select top 10 *
---from users
---where surname = 'Adams' and firstname = 'Robert'
+select top 10 AccessLevelId, *
+from users
+where surname = 'Payne' --and firstname = 'Robert'
 
 --select * -- Field14_50 as BEC_Number
 --from users
@@ -19,6 +19,11 @@ use Net2
 --)
 --order by firstname + ' ' + surname
 
-select top 1000 *
-from users
-where field13_Memo is not null and Field13_Memo not like ''
+--select top 1000 *
+--from users
+--where field13_Memo is not null and Field13_Memo not like ''
+
+--sp_tables
+
+--select top 10 *
+--from [Access levels]
