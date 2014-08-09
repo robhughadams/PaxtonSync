@@ -157,3 +157,6 @@ $RECYCLE.BIN/
 
 # Ignoring config to hide sensitive info
 App.config
+
+# Diff temp files
+*.orig
