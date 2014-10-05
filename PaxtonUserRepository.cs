@@ -32,7 +32,12 @@ namespace PaxtonSync
 				Logger.WriteLine("{0}\tTrial run - not updating user.", paxtonUser);
 				return;
 			}
-			
+
+			_UpdatePaxtonUser(paxtonUser, true);
+		}
+
+		private void _UpdatePaxtonUser(PaxtonUser paxtonUser, bool active)
+		{
 			_net2Client.UpdateUserRecord(
 				paxtonUser.UserId,
 				paxtonUser.AccessLevelId,
@@ -47,13 +52,13 @@ namespace PaxtonSync
 				paxtonUser.PIN,
 				paxtonUser.Picture,
 				paxtonUser.ActivationDate,
-				paxtonUser.Active,
+				active, //if we're updating a use we want to make sure it's also active instead of just copying paxtonUser.Active,
 				paxtonUser.Fax,
 				paxtonUser.ExpiryDate,
 				paxtonUser.CustomFields);
 		}
 
-		public void CreateUser(int accessLevelId, int departmentId, string firstName, string surname, int becNumber)
+		public void CreateUser(int accessLevelId, string firstName, string surname, int becNumber)
 		{
 			if (_trialRunOnly)
 			{
@@ -80,12 +85,25 @@ namespace PaxtonSync
 					becNumber.ToString()
 			};
 
+			const int departmentId = 0;
+
 			_net2Client.AddUserRecord(
 				accessLevelId,
 				departmentId,
 				firstName,
 				surname,
 				CustomFields);
+		}
+
+		public void DeleteUser(PaxtonUser paxtonUser)
+		{
+			if (_trialRunOnly)
+			{
+				Logger.WriteLine("{0}\tTrial run - not deleting user.", paxtonUser);
+				return;
+			}
+
+			_UpdatePaxtonUser(paxtonUser, false);
 		}
 	}
 }

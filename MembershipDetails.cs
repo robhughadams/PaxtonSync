@@ -1,4 +1,8 @@
-﻿namespace PaxtonSync
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+
+namespace PaxtonSync
 {
 	internal class MembershipDetails
 	{
@@ -8,14 +12,5 @@
 		public string FirstName { get; set; }
 		public string LastName { get; set; }
 		public MembershipStatus MembershipStatus { get; set; }
-	}
-
-	internal enum MembershipStatus
-	{
-		Current,
-		LYBNTY,
-		Expired,
-		Cancelled,
-		Deceased
 	}
 }
